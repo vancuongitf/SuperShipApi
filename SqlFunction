@@ -1,0 +1,29 @@
+// String Contain
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS `contains` $$
+CREATE FUNCTION contains(source varchar(200), child varchar(200)) 
+returns INT(1) DETERMINISTIC
+BEGIN
+  return SELECT CONVERT(UPPER(source), BINARY) LIKE CONCAT('%',CONVERT(UPPER(child), BINARY),'%');
+END $$
+
+DELIMITER ;
+
+// Tim kiem 
+SELECT DISTINCT store.store_id FROM store LEFT JOIN drink ON store.store_id = drink.store_id WHERE CONVERT(UPPER(store.store_name), BINARY) LIKE CONCAT('%',CONVERT(UPPER('đào'), BINARY),'%') OR CONVERT(UPPER(drink.drink_name), BINARY) LIKE CONCAT('%',CONVERT(UPPER('đào'), BINARY),'%')
+
+SELECT DISTINCT store.store_id FROM store LEFT JOIN drink ON store.store_id = drink.store_id WHERE stringContains(store.store_name, 'đào') OR stringContains(drink.drink_name,'đào')
+
+// Tinh khoang cach
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS `get_distance_in_miles_between_geo_locations` $$
+CREATE FUNCTION get_distance_in_miles_between_geo_locations(geo1_latitude decimal(10,6), geo1_longitude decimal(10,6), geo2_latitude decimal(10,6), geo2_longitude decimal(10,6)) 
+returns decimal(10,3) DETERMINISTIC
+BEGIN
+  return ((ACOS(SIN(geo1_latitude * PI() / 180) * SIN(geo2_latitude * PI() / 180) + COS(geo1_latitude * PI() / 180) * COS(geo2_latitude * PI() / 180) * COS((geo1_longitude - geo2_longitude) * PI() / 180)) * 180 / PI()) * 60 * 1.1515 * 1609.344);
+END $$
+
+DELIMITER ;
