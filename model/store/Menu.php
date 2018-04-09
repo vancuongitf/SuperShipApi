@@ -1,10 +1,8 @@
 <?php
 	class Menu {
-		var $drinks;
 		var $sub_menus;
 
-		function __construct($drinks, $sub_menus) {
-			$this->drinks = $drinks;
+		function __construct($sub_menus) {
 			$this->sub_menus = $sub_menus;
 		}
 	}
