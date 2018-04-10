@@ -130,7 +130,6 @@
 		**/
 		function getMenu($storeId) {
 			$sub_menus = array();
-			$drinks = $this->getDrinkByStoreId($storeId);
 			if ($this->mysql) {
 				$query_menu = "SELECT * FROM menu WHERE menu_store_id = {$storeId};";
 				$result = mysqli_query($this->mysql, $query_menu);
@@ -142,29 +141,13 @@
 					}
 				}
 			}
-			return new Menu($drinks, $sub_menus);
+			return new Menu($sub_menus);
 		}
 
 		function getDrink($menuId) {
 			$drinks = array();
 			if ($this->mysql) {
 				$query_drink = "SELECT * FROM drink WHERE drink_menu_id = {$menuId};";
-				$result = mysqli_query($this->mysql, $query_drink);
-				if (mysqli_num_rows($result) > 0) {
-					while ($row = $result->fetch_assoc()) {
-						$drink = new Drink($row);
-						$drink->drink_options = $this->getDrinkOptionByDrinkId($drink->drink_id);
-						array_push($drinks, $drink);
-					}
-				}
-			}
-			return $drinks;
-		}
-
-		function getDrinkByStoreId($store_id) {
-			$drinks = array();
-			if ($this->mysql) {
-				$query_drink = "SELECT * FROM drink WHERE store_id = {$store_id} AND drink_menu_id IS NULL;";
 				$result = mysqli_query($this->mysql, $query_drink);
 				if (mysqli_num_rows($result) > 0) {
 					while ($row = $result->fetch_assoc()) {
