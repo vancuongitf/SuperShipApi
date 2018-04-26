@@ -13,13 +13,8 @@
     			if (TextUtil::validatePassWord($user->password)) {
     				if (TextUtil::validateFullName($user->full_name)) {
     					if (TextUtil::validatePhoneNumber($user->phone)) {
-    						$active_key = md5(microtime(true));
-    						$user->active_key = $active_key;
     						$userDataSource = new UserDataSource(DbConnection::getConnection());
 							$response = $userDataSource->createUser($user);
-							if ($response->code == "HTTP/1.1 200 OK") {
-								mail($user->email,"Kích Hoạt Tài Khoản","https://vnshipperman.000webhostapp.com/user/active.php?user={$user->name}&active_key={$active_key}");
-							}
     					} else {
     						$apiError = new ApiError(678, "Số điện thoại không hợp lệ.");
     						$response = new Response(678, $apiError);
