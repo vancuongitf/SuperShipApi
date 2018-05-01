@@ -5,6 +5,7 @@
 	$response = null;
 	$advance_param = 1;
 	$page = 1;
+	date_default_timezone_set("Asia/Bangkok");
 	if (isset($_GET['advance_param'])){
 		$advance_param = $_GET['advance_param'];
 	}

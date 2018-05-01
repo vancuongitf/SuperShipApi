@@ -24,6 +24,7 @@
 			$this->store_lat_lng = new LatLng($row['store_lat'], $row['store_lng']);
 			$this->store_phone = $row['store_phone'];
 			$this->store_email = $row['store_email'];
+			$this->store_image = $row['store_image'];	
 			$this->store_open_time = new OpenTime($row['store_open_day'], $row['store_open_hour'], $row['store_close_hour']);
 			$this->store_rate = new StarRate($row);
 		}	

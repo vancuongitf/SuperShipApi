@@ -1,5 +1,6 @@
 <?php
 	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
+	require_once('/storage/ssd3/122/4702122/public_html/model/response/MessageResponse.php');
 	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
 	require_once('/storage/ssd3/122/4702122/public_html/model/response/StoreListResponse.php');
 	require_once('/storage/ssd3/122/4702122/public_html/model/store/Store.php');
@@ -17,6 +18,37 @@
 			$this->mysql = $sql;
 		}
 
+		function createStore($store) {
+			if ($this->mysql) {
+
+				$userId = $this->getUserIdFromToken($store->token);
+				if ($userId == -1) {
+					return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+				}
+				$name = $store->store_name;
+				$unAccentName = $store->store_un_accent_name;
+				$address = $store->store_address;
+				$lat = $store->store_lat_lng->latitude;
+				$lng = $store->store_lat_lng->longitude;
+				$phone = $store->store_phone;
+				$email = $store->store_email;
+				$image = $store->store_image;
+				$opendays = json_encode($store->store_open_time->open_days);
+				$openHour = $store->store_open_time->open;
+				$clsoeHour = $store->store_open_time->close;
+				$query = "INSERT INTO `store` (`store_user_id`, `store_name`, `store_name_un_accent`, `store_address`, `store_lat`, `store_lng`, `store_phone`, `store_email`, `store_image`, `store_open_day`, `store_open_hour`, `store_close_hour`) VALUES ($userId, '{$name}', '{$unAccentName}', '{$address}', {$lat}, {$lng}, '{$phone}', '{$email}', '{$image}', '{$opendays}', {$openHour}, {$clsoeHour});";
+				mysqli_query($this->mysql, $query);
+				if (mysqli_affected_rows($this->mysql) == 1) {
+					return new Response(200, new MessageResponse("Chúc mừng bạn đã tạo cửa hàng thành công."));
+				} else {
+					// return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau!"));
+					return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));
+				}
+			} else {
+				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
 		function getStoreInfo($storyId) {
 			$store = null;
 			
@@ -26,8 +58,9 @@
 				if (mysqli_num_rows($result) == 1) {
 					$row = $result->fetch_assoc();
 					$store = new Store($row);
-					$store->menu = $this->getMenu($store->store_id);
+					$store->menu = $this->getDrink($store->store_id);
 					$store->options = $this->getDrinkOption($store->store_id);
+					$store->isOpening = $this->isOpening($store->store_open_time);
 				}
 				return new Response(200, $store);
 			} else {
@@ -94,6 +127,56 @@
 			}
 		}
 
+		function getExpressStoreByAccessToken($token, $page) {
+			if ($token == null || $token == "") {
+				return new Response(401, ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+			}
+			if ($this->mysql) {
+				$query = "SELECT user_id FROM user WHERE user_token = '{$token}'";
+				$rs = mysqli_query($this->mysql, $query);
+				$numRows = mysqli_num_rows($rs);
+				switch ($numRows) {
+					case 0:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+
+					case 1:
+						$row = $rs->fetch_assoc();
+						return $this->getExpressStoreByUserId($row['user_id'], $page);
+						break;
+					default:
+						$query = "UPDATE user SET user_token = '' WHERE user_token = $token";
+						mysqli_query($this->mysql, $query);
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						break;
+				}
+			} else {
+					return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function getExpressStoreByUserId($userId, $page) {
+			$ignore = ($page - 1) * 20;
+			$stores = array();
+			if ($this->mysql) {
+				$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id WHERE store.store_user_id = {$userId} GROUP BY store.store_id LIMIT {$ignore}, 20;";
+				$passResult = "SELECT store.store_id from store WHERE store.store_user_id = {$userId};";
+				$result = mysqli_query($this->mysql, $query);
+				if (mysqli_num_rows($result) > 0) {
+					while($row = $result->fetch_assoc()) {
+						array_push($stores, new StoreExpress($row));
+					}
+				}
+				$passResult = mysqli_query($this->mysql, $passResult);
+				$nextPage = false;
+				if (mysqli_num_rows($passResult) > $page * 20) {
+					$nextPage = true;
+				}
+				return new Response(200 ,new StoreListResponse($nextPage, $stores));
+			} else {
+				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
 		// Search store by name or drink name.
 		function search($key, $page, $lat, $lng) {
 			$ignore = ($page - 1) * 20;
@@ -144,10 +227,10 @@
 			return new Menu($sub_menus);
 		}
 
-		function getDrink($menuId) {
+		function getDrink($storeId) {
 			$drinks = array();
 			if ($this->mysql) {
-				$query_drink = "SELECT * FROM drink WHERE drink_menu_id = {$menuId};";
+				$query_drink = "SELECT * FROM drink WHERE store_id = {$storeId};";
 				$result = mysqli_query($this->mysql, $query_drink);
 				if (mysqli_num_rows($result) > 0) {
 					while ($row = $result->fetch_assoc()) {
@@ -210,6 +293,43 @@
 				}
 			}
 			return $items;
+		}
+
+		function isOpening($openTime) {
+			$currentDay = (int) date('w');
+			$currentTime = (int) date('H') * 60 + (int) date('i');
+			if ($openTime->open <= $currentTime && $currentTime <= $openTime->close) {
+				foreach ($openTime->open_days as $value) {
+					if ($value == $currentDay) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		function getUserIdFromToken($token) {
+			if ($token == null || $token == "") {
+				return -1;
+			}
+			if ($this->mysql) {
+				$query = "SELECT user_id FROM user WHERE user_token = '{$token}'";
+				$rs = mysqli_query($this->mysql, $query);
+				$numRows = mysqli_num_rows($rs);
+				switch ($numRows) {
+					case 0:
+						return -1;
+					case 1:
+						$row = $rs->fetch_assoc();
+						return (int)($row['user_id']);
+					default:
+						$query = "UPDATE user SET user_token = '' WHERE user_token = $token";
+						mysqli_query($this->mysql, $query);
+						return -1;
+				}
+			} else {
+					return -1;
+			}
 		}
 	}
 ?>
