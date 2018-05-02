@@ -41,9 +41,38 @@
 				if (mysqli_affected_rows($this->mysql) == 1) {
 					return new Response(200, new MessageResponse("Chúc mừng bạn đã tạo cửa hàng thành công."));
 				} else {
-					// return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau!"));
 					return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));
 				}
+			} else {
+				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function createDrink($drink) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($drink->token);
+					switch ($userId) {
+						case -1:
+							return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+						case -2:
+							return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+						default:
+							$storeId = $drink->store_id;
+							$name = $drink->name;
+							$unAccentName = $drink->un_accent_name;
+							$price = $drink->price;
+							$image = $drink->image;
+
+							$query = "INSERT INTO `drink` (`store_id`, `drink_name`, `drink_name_un_accent`, `drink_price`, `drink_image`) VALUES ({$storeId}, '{$name}', '{$unAccentName}', {$price}, '{$image}');";
+							mysqli_query($this->mysql, $query);
+							if (mysqli_affected_rows($this->mysql) == 1) {
+								return new Response(200, new MessageResponse("Thêm đồ uống thành công."));
+							} else {
+								return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+							}
+							break;
+					}
 			} else {
 				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
@@ -328,7 +357,7 @@
 						return -1;
 				}
 			} else {
-					return -1;
+					return -2;
 			}
 		}
 	}
