@@ -30,3 +30,14 @@ DELIMITER ;
 
 // Lastest Bill
 CREATE FUNCTION lastestBill(storeId BIGINT(20)) returns timestamp DETERMINISTIC BEGIN return (SELECT bill.bill_time FROM bill WHERE bill.bill_store_id = storeId ORDER BY bill.bill_time DESC LIMIT 0, 1); END
+
+DELIMITER $$
+DROP FUNCTION IF EXISTS `billPrice` $$
+
+CREATE FUNCTION billPrice(billId BIGINT(20)) 
+returns INT (11)
+DETERMINISTIC 
+BEGIN 
+return (SELECT SUM(drink_price) FROM bill_drink WHERE bill_drink.bill_id = billId ); 
+END $$
+DELIMITER ;

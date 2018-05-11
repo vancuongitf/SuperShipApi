@@ -44,7 +44,7 @@
 					return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));
 				}
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -96,7 +96,64 @@
 						}
 				}
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function editDrink($editBody) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($editBody->token);
+				switch ($userId) {
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					case -2:
+						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+					default:
+						$drinkId = $editBody->drink_id;
+						$name = $editBody->name;
+						$unAccentName = $editBody->un_accent_name;
+						$price = $editBody->price;
+						$image = $editBody->image;
+						$addOptions = $editBody->add_options;
+						$deleteOptions = $editBody->delete_options;
+
+						$query = "UPDATE drink SET drink_name = '{$name}', drink_name_un_accent = '{$unAccentName}', drink_price = {$price}, drink_image = '{$image}' WHERE drink_id = {$drinkId}";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							$size = count($addOptions);
+							if ($size > 0) {
+								$valuesQuery = "";
+								for ($i = 0; $i < $size; $i++) {
+									$option = $addOptions[$i];
+									$valuesQuery = $valuesQuery . " ({$drinkId}, {$option})";
+									if ($i < $size - 1) {
+										$valuesQuery = $valuesQuery . ", ";
+									}
+								}
+								$query = "INSERT INTO `drink_menu_option` (`drink_id`, `drink_option_id`) VALUES " . $valuesQuery . " ;";
+								mysqli_query($this->mysql, $query);
+							} 
+							$size = count($deleteOptions);
+							if ($size > 0) {
+								$whereCause = "DELETE FROM drink_menu_option WHERE drink_id = {$drinkId} AND drink_option_id IN (";
+								for ($i = 0; $i < $size; $i++) {
+									$option = $deleteOptions[$i];
+									$whereCause = $whereCause . " {$option}";
+									if ($i < $size - 1) {
+										$whereCause = $whereCause . ", ";
+									}
+								}
+								$whereCause = $whereCause . ");" ;
+								mysqli_query($this->mysql, $whereCause);
+							}
+							return new Response(200, new MessageResponse("Cập nhật thông tin đồ uống thành công."));
+						} else {
+							return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -124,7 +181,7 @@
 						}
 				}
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -136,7 +193,7 @@
 						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
 						
 					case -2:
-						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+						return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 					default:
 						$valuesQuery = "";
 						$items = $drinkOptionItem->items;
@@ -161,7 +218,7 @@
 						}
 				}
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -180,7 +237,7 @@
 				}
 				return new Response(200, $store);
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -239,7 +296,7 @@
 				}
 				return new Response(200 ,new StoreListResponse($nextPage, $stores));
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -289,7 +346,88 @@
 				}
 				return new Response(200 ,new StoreListResponse($nextPage, $stores));
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function deleteDrinkOption($token, $id) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($token);
+				switch ($userId) {
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					case -2:
+						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+					default:
+						$query = "UPDATE drink_option SET drink_option_status = 0 WHERE drink_option_id = {$id}";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							$deleteQuery = "DELETE FROM drink_menu_option WHERE drink_option_id = {$id}";
+							mysqli_query($this->mysql, $deleteQuery);
+							return new Response(200, new MessageResponse("Xóa tùy chọn thành công"));
+						} else {
+							return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function editDrinkOption($editBody) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($editBody->token);
+				switch ($userId) {
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					case -2:
+						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+					default:
+
+						// Update Infomation Of Drink Option
+						$query = "UPDATE drink_option SET drink_option_name = '{$editBody->name}', 	drink_option_mutil_choose = {$editBody->multi_choose} WHERE drink_option_id = {$editBody->option_id}";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							
+							// Delete Items
+							$deleteQuery = "DELETE FROM drink_option_item WHERE drink_option_item_id IN ( ";
+							$deleteSize  = count($editBody->delete_items);
+							for ($i = 0; $i < $deleteSize; $i++) {
+								$item = $editBody->delete_items[$i];
+								$deleteQuery = $deleteQuery . $item;
+								if ($i < $deleteSize - 1) {
+									$deleteQuery = $deleteQuery . ", ";
+								}
+							}
+							$deleteQuery = $deleteQuery . ");";
+							mysqli_query($this->mysql, $deleteQuery);
+
+							// ADD new Items
+							$valuesQuery = "";
+							$items = $editBody->add_items;
+							$size = count($items);
+							for ($i = 0; $i < $size; $i++) {
+								$item = $items[$i];
+								$drinkOptionId = $item->drink_option_id;
+								$name = $item->name;
+								$price = $item->price;
+								$valuesQuery = $valuesQuery . " ({$editBody->option_id}, '{$name}', {$price})";
+								if ($i < $size - 1) {
+									$valuesQuery = $valuesQuery . ", ";
+								}
+							}
+
+							$query = "INSERT INTO `drink_option_item` ( `drink_option_id`, `drink_option_item_name`, `drink_option_item_price`) VALUES " . $valuesQuery . ";";
+							mysqli_query($this->mysql, $query);
+							return new Response(200, new MessageResponse("Cập nhật thông tin tùy chọn thành công"));
+						} else {
+							return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
 		}
 
@@ -318,8 +456,62 @@
 				}
 				return new Response(200 ,new StoreListResponse($nextPage, $stores));
 			} else {
-				return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
+		}
+
+
+		function orderDrink($orderBody) {
+			$userId = $this->getUserIdFromToken($orderBody->user_token);
+			$billId = (int)(microtime(true)*10000);
+			$drinks = $orderBody->drinks;
+			date_default_timezone_set("Asia/Bangkok");
+			if ($this->mysql) {
+				$orderAddress = $orderBody->address;
+				$latLng = $orderAddress->lat_lng;
+				$time = time();
+				$confirmCode = rand(100000, 999999);
+				if ($userId == -1 || $userId == -2) {
+					// $query = "INSERT INTO `bill` (`bill_id`, `bill_store_id`, `bill_user_name`, `bill_user_phone`, `bill_address`, `bill_lat`, `bill_lng`, `bill_time`, `bill_ship_price`, `bill_status`, `confirm_code`) VALUES ({$billId}, {$orderBody->store_id}, '{$orderBody->user_name}', '{$orderBody->user_phone}', '{$orderAddress->address}', {$latLng->latitude}, {$latLng->longitude}, {$time}, {$orderBody->ship_price}, 0, $confirmCode);";
+					return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+				} else {
+					$query = "INSERT INTO `bill` (`bill_id`, `bill_store_id`, bill_user_id,`bill_user_name`, `bill_user_phone`, `bill_address`, `bill_lat`, `bill_lng`, `bill_time`, `bill_ship_price`, `bill_status`, `confirm_code`) VALUES ({$billId}, {$orderBody->store_id}, {$userId},'{$orderBody->user_name}', '{$orderBody->user_phone}', '{$orderAddress->address}', {$latLng->latitude}, {$latLng->longitude}, {$time}, {$orderBody->ship_price}, 0, $confirmCode);";
+				}
+				mysqli_query($this->mysql, $query);
+				if (mysqli_affected_rows($this->mysql) == 1) {
+					$drinkQuery = "INSERT INTO `bill_drink` (`id`, `bill_id`, `drink_id`, `drink_name`, `drink_image`, `drink_price`, `note`, `drink_option`, `drink_count`) VALUES ";
+					$drinksCount = count($drinks);
+					$valuesQuery = "";
+					for ($i = 0; $i < $drinksCount; $i++) {
+						$drink = $drinks[$i];
+						$id = (int)(microtime(true)*10000 . rand(1, 9999));
+						$drinkId = $drink->drink_id;
+						$name = $drink->drink_name;
+						$price = $drink->drink_price;
+						$image = $drink->drink_image;
+						$count = $drink->count;
+						$note = $drink->note;
+						$options = $drink->drink_options;
+						$drinkOptions = json_encode($options);
+						$valuesQuery =$valuesQuery . " ({$id}, {$billId}, {$drinkId}, '{$name}','{$image}', {$price}, '{$note}', '{$drinkOptions}', {$count})";
+						if ($i < $drinksCount - 1) {
+							$valuesQuery = $valuesQuery . ", ";
+						}
+					}
+					$drinkQuery = $drinkQuery . $valuesQuery;
+					mysqli_query($this->mysql, $drinkQuery);
+					if (mysqli_affected_rows($this->mysql) == $drinksCount) {
+						return new Response(200, new MessageResponse($billId));
+					} else {
+						return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+					}
+				} else {
+					return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+
 		}
 
 		/**
@@ -362,7 +554,7 @@
 		function getDrinkOption($storeId) {
 			$options = array();
 			if ($this->mysql) {
-				$query_option = "SELECT * FROM drink_option WHERE drink_option_store_id = {$storeId};";
+				$query_option = "SELECT * FROM drink_option WHERE drink_option_store_id = {$storeId} AND drink_option_status = 1;";
 				$result = mysqli_query($this->mysql, $query_option);
 				if (mysqli_num_rows($result) > 0) {
 					while ($row = $result->fetch_assoc()) {
@@ -398,7 +590,7 @@
 		function getDrinkOptionItem($drinkOptionId) {
 			$items = array();
 			if ($this->mysql) {
-				$query_option = "SELECT * FROM drink_option_item WHERE drink_option_id = {$drinkOptionId};";
+				$query_option = "SELECT * FROM drink_option_item WHERE drink_option_id = {$drinkOptionId} ORDER BY drink_option_item_name ASC;";
 				$result = mysqli_query($this->mysql, $query_option);
 				if (mysqli_num_rows($result) > 0) {
 					while ($row = $result->fetch_assoc()) {
