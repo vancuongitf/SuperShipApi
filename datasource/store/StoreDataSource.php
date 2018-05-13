@@ -48,6 +48,85 @@
 			}
 		}
 
+		function updateStoreInfo($store) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($store->token);
+				switch ($userId) {
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					case -2:
+						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+					default:
+
+						$storeId = $store->id;
+						$name = $store->store_name;
+						$unAccentName = $store->store_un_accent_name;
+						$address = $store->store_address;
+						$lat = $store->store_lat_lng->latitude;
+						$lng = $store->store_lat_lng->longitude;
+						$phone = $store->store_phone;
+						$email = $store->store_email;
+						$image = $store->store_image;
+						$opendays = json_encode($store->store_open_time->open_days);
+						$openHour = $store->store_open_time->open;
+						$clsoeHour = $store->store_open_time->close;
+						$query = "UPDATE store SET store_name = '{$name}', store_name_un_accent = '{$unAccentName}', store_address = '{$address}', store_lat = {$lat}, store_lng = {$lng}, store_phone = '{$phone}', store_email = '{$email}', store_image = '{$image}', store_open_day = '{$opendays}', store_open_hour = {$openHour}, store_close_hour = {$clsoeHour} WHERE store_id = {$storeId} AND store_user_id = {$userId};";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							return new Response(200, new MessageResponse("Cập nhật thông tin cửa hàng thành công."));
+						} else {
+							return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function getStoreInfo($storyId) {
+			$store = null;
+			
+			if ($this->mysql) {
+				$query = "SELECT store.store_id, store.store_status, store.store_user_id, store.store_name, store.store_address, store.store_lat, store.store_lng, store.store_phone, store.store_email, store.store_image, store.store_open_day, store.store_open_hour, store.store_close_hour, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id WHERE store_id = {$storyId};";
+				$result = mysqli_query($this->mysql, $query);
+				if (mysqli_num_rows($result) == 1) {
+					$row = $result->fetch_assoc();
+					$store = new Store($row);
+					$store->menu = $this->getDrink($store->store_id);
+					$store->options = $this->getDrinkOption($store->store_id);
+					$store->isOpening = $this->isOpening($store->store_open_time);
+				}
+				return new Response(200, $store);
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function changeStoreStatus($token, $storeId, $newStatus) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($token);
+				switch ($userId) {
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					case -2:
+						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+					default:
+
+						$query = "UPDATE store SET store_status = {$newStatus} WHERE store_id = {$storeId} AND store_user_id = {$userId};";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							return new Response(200, new MessageResponse("Cập nhật trạng thái cửa hàng thành công."));
+						} else {
+							return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
 		function createDrink($drink) {
 			if ($this->mysql) {
 				$userId = $this->getUserIdFromToken($drink->token);
@@ -245,25 +324,6 @@
 			}
 		}
 
-		function getStoreInfo($storyId) {
-			$store = null;
-			
-			if ($this->mysql) {
-				$query = "SELECT store.store_id, store.store_user_id, store.store_name, store.store_address, store.store_lat, store.store_lng, store.store_phone, store.store_email, store.store_image, store.store_open_day, store.store_open_hour, store.store_close_hour, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id WHERE store_id = {$storyId};";
-				$result = mysqli_query($this->mysql, $query);
-				if (mysqli_num_rows($result) == 1) {
-					$row = $result->fetch_assoc();
-					$store = new Store($row);
-					$store->menu = $this->getDrink($store->store_id);
-					$store->options = $this->getDrinkOption($store->store_id);
-					$store->isOpening = $this->isOpening($store->store_open_time);
-				}
-				return new Response(200, $store);
-			} else {
-				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
-			}
-		}
-
 		function getExpressesStore($advanceParam, $page, $lat, $lng){
 			$ignore = ($page - 1) * 20;
 			$query = "";
@@ -273,34 +333,34 @@
 			if (isset($lat) && isset($lng)) {
 				switch ($advanceParam) {
 					case 1: // Tim quanh day
-						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count, getDistance({$lat}, {$lng}, store.store_lat, store.store_lng) as store_distance FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id GROUP BY store.store_id ORDER BY store_distance ASC LIMIT {$ignore}, 20;";
+						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count, getDistance({$lat}, {$lng}, store.store_lat, store.store_lng) as store_distance FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id WHERE store_status = 1 GROUP BY store.store_id ORDER BY store_distance ASC LIMIT {$ignore}, 20;";
 						$passResultQuery = "SELECT store.store_id FROM store;";
 						break;
 					
 					case 2: // Dat nhieu
-						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count, getDistance($lat, $lng, store.store_lat, store.store_lng) as store_distance FROM store WHERE getBillCount(store.store_id) > 0 ORDER BY getBillCount(store.store_id) DESC LIMIT {$ignore}, 20;";
+						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count, getDistance($lat, $lng, store.store_lat, store.store_lng) as store_distance FROM store WHERE getBillCount(store.store_id) > 0 AND store_status = 1 ORDER BY getBillCount(store.store_id) DESC LIMIT {$ignore}, 20;";
 						$passResultQuery = "SELECT store.store_id FROM store WHERE getBillCount(store.store_id) > 0;";
 						break;
 
 					case 3: // Vua dat
-						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count, getDistance($lat, $lng, store.store_lat, store.store_lng) as store_distance FROM store WHERE lastestBill(store.store_id) IS NOT NULL ORDER BY lastestBill(store.store_id) DESC LIMIT {$ignore}, 20;";
+						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count, getDistance($lat, $lng, store.store_lat, store.store_lng) as store_distance FROM store WHERE lastestBill(store.store_id) IS NOT NULL AND store_status = 1 ORDER BY lastestBill(store.store_id) DESC LIMIT {$ignore}, 20;";
 						$passResultQuery = "SELECT DISTINCT store.store_id FROM store WHERE lastestBill(store.store_id) IS NOT NULL;";
 						break;
 				}
 			} else {
 				switch ($advanceParam) {
 					case 1: // Tim quanh day
-						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id GROUP BY store.store_id LIMIT {$ignore}, 20;";
+						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, SUM(rate.rate_value) / COUNT(rate.rate_store_id) as rate_value, COUNT(rate.rate_store_id) as rate_count FROM store LEFT JOIN rate ON store.store_id = rate.rate_store_id WHERE store_status = 1 GROUP BY store.store_id LIMIT {$ignore}, 20;";
 						$passResultQuery = "SELECT store.store_id FROM store;";
 						break;
 					
 					case 2: // Dat nhieu
-						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count FROM store WHERE getBillCount(store.store_id) > 0 ORDER BY getBillCount(store.store_id) DESC LIMIT {$ignore}, 20;";
+						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count FROM store WHERE getBillCount(store.store_id) > 0 AND store_status = 1 ORDER BY getBillCount(store.store_id) DESC LIMIT {$ignore}, 20;";
 						$passResultQuery = "SELECT store.store_id FROM store WHERE getBillCount(store.store_id) > 0;";
 						break;
 
 					case 3: // Vua dat
-						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count FROM store WHERE lastestBill(store.store_id) IS NOT NULL ORDER BY lastestBill(store.store_id) DESC LIMIT {$ignore}, 20;";
+						$query = "SELECT DISTINCT store.store_id ,store.store_name ,store.store_address ,store.store_lat ,store.store_lng ,store.store_open_day ,store.store_open_hour, store.store_close_hour ,store.store_image, getRateValue(store.store_id) as rate_value, getRateCount(store.store_id) as rate_count FROM store WHERE lastestBill(store.store_id) IS NOT NULL AND store_status = 1 ORDER BY lastestBill(store.store_id) DESC LIMIT {$ignore}, 20;";
 						$passResultQuery = "SELECT DISTINCT store.store_id FROM store WHERE lastestBill(store.store_id) IS NOT NULL;";
 						break;
 				}

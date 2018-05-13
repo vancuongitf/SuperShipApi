@@ -27,6 +27,7 @@
 			$this->store_image = $row['store_image'];	
 			$this->store_open_time = new OpenTime($row['store_open_day'], $row['store_open_hour'], $row['store_close_hour']);
 			$this->store_rate = new StarRate($row);
+			$this->store_status = $row['store_status'] == '1';
 		}	
 	}	
 ?>
