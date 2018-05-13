@@ -157,6 +157,29 @@
 			}
 		}
 
+		function deleteDrink($token, $id) {
+			if ($this->mysql) {
+				$userId = $this->getUserIdFromToken($token);
+				switch ($userId) {
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					case -2:
+						return new Response(678, new ApiError("Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+					default:
+						$query = "UPDATE drink SET drink_status = 0 WHERE drink_id = {$id};";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							return new Response(200, new MessageResponse("Đã xóa đồ uống ra khỏi menu."));
+						} else {
+							return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
 		function createDrinkOption($drinkOption){
 			if ($this->mysql) {
 				$userId = $this->getUserIdFromToken($drinkOption->token);
@@ -538,11 +561,12 @@
 		function getDrink($storeId) {
 			$drinks = array();
 			if ($this->mysql) {
-				$query_drink = "SELECT * FROM drink WHERE store_id = {$storeId};";
+				$query_drink = "SELECT *, drinkOrderCount(drink_id) as order_count FROM drink WHERE store_id = {$storeId} AND drink_status = 1;";
 				$result = mysqli_query($this->mysql, $query_drink);
 				if (mysqli_num_rows($result) > 0) {
 					while ($row = $result->fetch_assoc()) {
 						$drink = new Drink($row);
+						$drink->order_count = $row['order_count'];
 						$drink->drink_options = $this->getDrinkOptionByDrinkId($drink->drink_id);
 						array_push($drinks, $drink);
 					}
