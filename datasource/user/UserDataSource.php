@@ -111,22 +111,6 @@
 			}else {
 				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
-
-			// 	$userId = $this->getUserIdFromToken($token);
-			// 	if ($userId == -1) {
-			// 		return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
-			// 	}
-			// 	$query = "SELECT "
-			// 	$query = "UPDATE user SET user_password = '{$pass}' WHERE user_id = {$userId};";
-			// 	mysqli_query($this->mysql, $query);
-			// 	if (mysqli_affected_rows($this->mysql) == 1) {
-			// 		return new Response(200, new MessageResponse("Đổi mật khẩu thành công."));
-			// 	} else {
-			// 		return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
-			// 	}
-			// } else {
-			// 	return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
-			// }
 		}
 
 		function requestResetPass($email) {
@@ -258,7 +242,7 @@
 						$row = $rs->fetch_assoc();
 						return (int)($row['user_id']);
 					default:
-						$query = "UPDATE user SET user_token = '' WHERE user_token = $token";
+						$query = "UPDATE user SET user_token = '' WHERE user_token = '{$token}'";
 						mysqli_query($this->mysql, $query);
 						return -1;
 				}

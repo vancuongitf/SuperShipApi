@@ -713,7 +713,7 @@
 						$row = $rs->fetch_assoc();
 						return (int)($row['user_id']);
 					default:
-						$query = "UPDATE user SET user_token = '' WHERE user_token = $token";
+						$query = "UPDATE user SET user_token = '' WHERE user_token = '{$token}'";
 						mysqli_query($this->mysql, $query);
 						return -1;
 				}

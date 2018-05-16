@@ -5,6 +5,7 @@
 	require_once('/storage/ssd3/122/4702122/public_html/model/store/ExpressBill.php');
 	require_once('/storage/ssd3/122/4702122/public_html/model/response/BillListResponse.php');
 	require_once('/storage/ssd3/122/4702122/public_html/model/store/Bill.php');
+	require_once('/storage/ssd3/122/4702122/public_html/model/store/Location.php');
 	require_once('/storage/ssd3/122/4702122/public_html/model/store/OrderedDrink.php');
 
 	class OrderDataSource {
@@ -27,7 +28,6 @@
 				$time = time() * 1000 + 7*60000*60;
 				$confirmCode = rand(100000, 999999);
 				if ($userId == -1 || $userId == -2) {
-					// $query = "INSERT INTO `bill` (`bill_id`, `bill_store_id`, `bill_user_name`, `bill_user_phone`, `bill_address`, `bill_lat`, `bill_lng`, `bill_time`, `bill_ship_price`, `bill_status`, `confirm_code`) VALUES ({$billId}, {$orderBody->store_id}, '{$orderBody->user_name}', '{$orderBody->user_phone}', '{$orderAddress->address}', {$latLng->latitude}, {$latLng->longitude}, {$time}, {$orderBody->ship_price}, 0, $confirmCode);";
 					return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
 				} else {
 					$query = "INSERT INTO `bill` (`bill_id`, `bill_store_id`, bill_user_id,`bill_user_name`, `bill_user_phone`, `bill_address`, `bill_lat`, `bill_lng`, `bill_ship_road`, `bill_time`, `bill_ship_price`, `bill_status`, `confirm_code`) VALUES ({$billId}, {$orderBody->store_id}, {$userId},'{$orderBody->user_name}', '{$orderBody->user_phone}', '{$orderAddress->address}', {$latLng->latitude}, {$latLng->longitude}, '{$orderBody->ship_road}', {$time}, {$orderBody->ship_price}, 0, $confirmCode);";
@@ -132,6 +132,7 @@
 								}
 							}
 							$bill->drinks = $orderedDrinks;
+							$bill->request_shipper = 1;
 							return new Response(200, $bill);
 						} else {
 							return new Response(678, new ApiError(678, "ãy ra lỗi! Vui lòng thử lại sau."));
@@ -170,6 +171,27 @@
 			}
 		}
 
+		function getLiveLocation($token, $id) {
+			$userId = $this->getUserIdFromToken($token);
+			switch ($userId) {
+				case -1:
+					return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+
+				case -2:
+					return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+				
+				default:
+					$query = "SELECT currentBillLat(bill.bill_id) as lat,currentBillLng(bill.bill_id) as lng, lastModifyLocation(bill.bill_id) as last_modify from bill WHERE bill.bill_id = $id AND bill.bill_status = 2 AND bill.bill_user_id = {$userId}";
+					$result = mysqli_query($this->mysql, $query);
+					if (mysqli_num_rows($result) == 1) {
+						return new Response(200, new Location($result->fetch_assoc()));
+					}
+					return new Response(678, new ApiError(678,"Xãy ra lỗi. Vui lòng thử lại sau."));
+
+
+			}
+		}
+
 		/**
 		*
 		*	CHILD FUNCTION FOR getStoreInfo.
@@ -204,7 +226,7 @@
 			$uri = 'https://api.sandbox.paypal.com/v1/payments/payment/' . $payId;
 			$ch = curl_init($uri);
 			curl_setopt_array($ch, array(
-    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAEMPa0BqmvR1ns3AqgOT-zhMSMLwxWdEVIXyrxL1Gbcp-ASt_UL6q-VTmYQ_IHmZOJcmSygCmYobYPwc-b4HPHe-ccHyg',
+    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAGbWN6ElSyCdnX1CdO24b5MA13TjlRlpdYfq3VuAH_QU1zM_kJGL4i0DbbzdHtX94HzpUXmu3HmjbuIw3FTd4ZPtTT3Fw',
 					'Content-Type: application/json'),
     			CURLOPT_RETURNTRANSFER  =>true,
     			CURLOPT_VERBOSE     => 1
