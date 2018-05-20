@@ -4,6 +4,7 @@
 	require_once('/storage/ssd3/122/4702122/public_html/connect/DbConnection.php');
 	require_once('/storage/ssd3/122/4702122/public_html/datasource/order/OrderDataSource.php');
 	require_once('/storage/ssd3/122/4702122/public_html/datasource/shipper/ShipperDataSource.php');
+	require_once('/storage/ssd3/122/4702122/public_html/datasource/staff/StaffDataSource.php');
 
 	$response = null;
 	switch ($_SERVER['REQUEST_METHOD']) {
@@ -22,10 +23,23 @@
 				$token = $_GET['token'];
 				$id = $_GET['id'];
 				$orderDataSource = null;
-				if (isset($_GET['from_shipper'])) {
-					$orderDataSource = new ShipperDataSource(DbConnection::getConnection());
-				} else {
-					$orderDataSource = new OrderDataSource(DbConnection::getConnection());
+				$module = 0;
+
+				if (isset($_GET['module'])) {
+					$module = (int)$_GET['module'];
+				}
+
+				switch ($module) {
+					case 0:
+						$orderDataSource = new OrderDataSource(DbConnection::getConnection());
+						break;
+					
+					case 1:
+						$orderDataSource = new ShipperDataSource(DbConnection::getConnection());
+						break;
+					case 2:
+						$orderDataSource = new StaffDataSource(DbConnection::getConnection());
+						break;
 				}
 				$response = $orderDataSource->getBillInfo($token, $id);
 			} else {

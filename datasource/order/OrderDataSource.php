@@ -25,7 +25,7 @@
 			if ($this->mysql) {
 				$orderAddress = $orderBody->address;
 				$latLng = $orderAddress->lat_lng;
-				$time = time() * 1000 + 7*60000*60;
+				$time = time() * 1000;
 				$confirmCode = rand(100000, 999999);
 				if ($userId == -1 || $userId == -2) {
 					return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
@@ -135,7 +135,7 @@
 							$bill->request_shipper = 1;
 							return new Response(200, $bill);
 						} else {
-							return new Response(678, new ApiError(678, "ãy ra lỗi! Vui lòng thử lại sau."));
+							return new Response(678, new ApiError(678, "Xãy ra lỗi! Vui lòng thử lại sau."));
 						}
 					} else {
 						return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
@@ -226,7 +226,7 @@
 			$uri = 'https://api.sandbox.paypal.com/v1/payments/payment/' . $payId;
 			$ch = curl_init($uri);
 			curl_setopt_array($ch, array(
-    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAGbWN6ElSyCdnX1CdO24b5MA13TjlRlpdYfq3VuAH_QU1zM_kJGL4i0DbbzdHtX94HzpUXmu3HmjbuIw3FTd4ZPtTT3Fw',
+    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAFUxD7Mhu4NoBAu6y9ZWANWRgqu15G1LkMgnuZKzTKxhzjVWoP0W4yedQDPP0xgWpuP1htZRMIrrCa8MkJXTyt7WXZb6w',
 					'Content-Type: application/json'),
     			CURLOPT_RETURNTRANSFER  =>true,
     			CURLOPT_VERBOSE     => 1

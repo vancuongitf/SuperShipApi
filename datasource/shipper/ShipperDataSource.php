@@ -345,7 +345,7 @@
 			$uri = 'https://api.sandbox.paypal.com/v1/payments/payment/' . $payId;
 			$ch = curl_init($uri);
 			curl_setopt_array($ch, array(
-    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAGbWN6ElSyCdnX1CdO24b5MA13TjlRlpdYfq3VuAH_QU1zM_kJGL4i0DbbzdHtX94HzpUXmu3HmjbuIw3FTd4ZPtTT3Fw',
+    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAFUxD7Mhu4NoBAu6y9ZWANWRgqu15G1LkMgnuZKzTKxhzjVWoP0W4yedQDPP0xgWpuP1htZRMIrrCa8MkJXTyt7WXZb6w',
 					'Content-Type: application/json'),
     			CURLOPT_RETURNTRANSFER  =>true,
     			CURLOPT_VERBOSE     => 1
