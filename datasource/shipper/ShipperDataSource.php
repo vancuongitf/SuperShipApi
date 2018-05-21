@@ -287,6 +287,31 @@
 			}
 		}
 
+		function changePassword($token, $oldpass, $pass){
+			if ($this->mysql) {
+				$shipperId = $this->getShipperIdFromToken($token);
+				switch ($shipperId) {
+					
+					case -2: 
+						return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+						
+					default:
+						$query = "UPDATE shipper SET password = '{$pass}' WHERE shipper_id = {$shipperId} AND password = {$oldpass}";
+						mysqli_query($this->mysql, $query);
+						if (mysqli_affected_rows($this->mysql) == 1) {
+							return new Response(200, "Đổi mật khẩu thành công.");
+						} else {
+							return new ApiError(678, "Mật khẩu cũ không chính xác.");
+						}
+				}
+			}else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
 		/**
 		*
 		* Child function.
@@ -345,7 +370,7 @@
 			$uri = 'https://api.sandbox.paypal.com/v1/payments/payment/' . $payId;
 			$ch = curl_init($uri);
 			curl_setopt_array($ch, array(
-    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAFUxD7Mhu4NoBAu6y9ZWANWRgqu15G1LkMgnuZKzTKxhzjVWoP0W4yedQDPP0xgWpuP1htZRMIrrCa8MkJXTyt7WXZb6w',
+    			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAG2xcvlmzZ74U_CMhMGuwsPmHMRBE1gD9kt6ZvbJXtukdcGlbo6OqzTGYeY-2Wm8tcg8jcQuq5ehrlWKNJgIJsJt374_g',
 					'Content-Type: application/json'),
     			CURLOPT_RETURNTRANSFER  =>true,
     			CURLOPT_VERBOSE     => 1

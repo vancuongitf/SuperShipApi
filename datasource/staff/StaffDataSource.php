@@ -238,6 +238,33 @@
 					}
 			}
 		}
+
+		function changeUserStatus($token, $id, $status, $isShipper) {
+			if ($this->mysql) {
+				$staffId = $this->getStaffIdFromToken($token);
+				switch($staffId) {
+
+					case -2:
+						return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của serve."));
+
+					case -1:
+						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
+
+					default:
+						if ($isShipper) {
+							$query = "UPDATE shipper SET status = {$status}, active_staff = {$staffId} WHERE shipper_id = {$id}";
+							mysqli_query($this->mysql, $query);
+							if (mysqli_affected_rows($this->mysql) == 1) {
+								return new Response (200, new MessageResponse("Cập nhật trạng thái shipper thành công."));
+							} else {
+								return new Response (678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));
+							}
+						}
+				}
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của serve."));
+			}
+		}
 		/**
 		* Child function.
 		*
