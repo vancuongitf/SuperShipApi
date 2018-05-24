@@ -7,4 +7,9 @@
 	echo date('w');
 	echo "---";
 	echo microtime(true)*10000;
+
+
+$path = getcwd();
+echo "This Is Your Absolute Path: ";
+echo $path;
 ?>
