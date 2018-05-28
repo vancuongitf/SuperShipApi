@@ -1,11 +1,14 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/user/User.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/RequestResetResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/MessageResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/user/Token.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/user/UserInfo.php');
+	$path = getcwd();
+	$paths = explode("public_html", $path);
+	$basePath = $paths[0];
+	require_once($basePath . 'public_html/model/user/User.php');
+	require_once($basePath . 'public_html/model/response/Response.php');
+	require_once($basePath . 'public_html/model/response/ApiError.php');
+	require_once($basePath . 'public_html/model/response/RequestResetResponse.php');
+	require_once($basePath . 'public_html/model/response/MessageResponse.php');
+	require_once($basePath . 'public_html/model/user/Token.php');
+	require_once($basePath . 'public_html/model/user/UserInfo.php');
 
 	class UserDataSource {
 		var $mysql;
@@ -31,7 +34,7 @@
 								break;
 							
 							case '1':
-								return new Response(200, new Token($token)); 														
+								return $this->getUserInfo($token); 														
 								break;
 
 							case '2':

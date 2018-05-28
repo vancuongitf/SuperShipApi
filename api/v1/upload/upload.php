@@ -1,7 +1,7 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/MessageResponse.php');
+	require_once('../../../model/response/Response.php');
+	require_once('../../../model/response/ApiError.php');
+	require_once('../../../model/response/MessageResponse.php');
 
 	$response = null;
 	$check = getimagesize($_FILES["image"]["tmp_name"]);

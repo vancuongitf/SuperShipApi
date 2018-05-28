@@ -1,9 +1,9 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/request/DrinkBody.php');
-	require_once('/storage/ssd3/122/4702122/public_html/connect/DbConnection.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/store/StoreDataSource.php');
+	require_once('../../../../model/response/ApiError.php');
+	require_once('../../../../model/response/Response.php');
+	require_once('../../../../model/request/DrinkBody.php');
+	require_once('../../../../connect/DbConnection.php');
+	require_once('../../../../datasource/store/StoreDataSource.php');
 	$response = null;
 	if (file_get_contents('php://input') != null) {
 		$drink = json_decode(file_get_contents('php://input'));

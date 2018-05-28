@@ -1,8 +1,8 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/connect/DbConnection.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/store/StoreDataSource.php');
+	require_once('../../../model/response/ApiError.php');
+	require_once('../../../model/response/Response.php');
+	require_once('../../../connect/DbConnection.php');
+	require_once('../../../datasource/store/StoreDataSource.php');
 	date_default_timezone_set("Asia/Bangkok");
 
 	$response = null;

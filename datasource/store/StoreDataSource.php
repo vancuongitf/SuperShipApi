@@ -1,15 +1,22 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/MessageResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/StoreListResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/Store.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/Menu.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/SubMenu.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/Drink.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/DrinkOption.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/DrinkOptionItem.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/StoreExpress.php');
+	$path = getcwd();
+	$paths = explode("public_html", $path);
+	$basePath = $paths[0];
+	require_once($basePath . 'public_html/model/response/Response.php');
+	require_once($basePath . 'public_html/model/response/MessageResponse.php');
+	require_once($basePath . 'public_html/model/response/ApiError.php');
+	require_once($basePath . 'public_html/model/response/StoreListResponse.php');
+	require_once($basePath . 'public_html/model/response/CommentResponse.php');
+	require_once($basePath . 'public_html/model/store/Store.php');
+	require_once($basePath . 'public_html/model/store/Menu.php');
+	require_once($basePath . 'public_html/model/store/SubMenu.php');
+	require_once($basePath . 'public_html/model/store/Drink.php');
+	require_once($basePath . 'public_html/model/store/DrinkOption.php');
+	require_once($basePath . 'public_html/model/store/DrinkOptionItem.php');
+	require_once($basePath . 'public_html/model/store/StoreExpress.php');
+	require_once($basePath . 'public_html/model/store/Rating.php');
+	require_once($basePath . 'public_html/model/store/Comment.php');
+
 	class StoreDataSource {
 
 		var $mysql;
@@ -594,7 +601,91 @@
 			} else {
 				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
 			}
+		}
 
+		function getStoreComments($userId, $storeId, $page) {
+			if ($this->mysql) {
+				$ignore = ($page - 1) * 20;
+				$ratings = array();
+				$comments = array();
+				$nextPageFlag = false;
+				$queryRating = "SELECT getUserRating({$userId}, {$storeId}) as user_rating, ratingCount({$storeId}, 1) as one_star, ratingCount({$storeId}, 2) as two_star, ratingCount({$storeId}, 3) as three_star, ratingCount({$storeId}, 4) as four_star, ratingCount({$storeId}, 5) as five_star";
+				$ratingResult = mysqli_query($this->mysql, $queryRating);
+				if (mysqli_num_rows($ratingResult) > 0) {
+					$row = $ratingResult->fetch_row();
+					$userRating = $row[0];
+					for($i = 1; $i < 6; $i++) {
+						$count = $row[$i];
+						if ($count == NULL) {
+							$count = 0;
+						}
+						array_push($ratings, new Rating($i, $count, $i == $userRating));
+					}
+				}
+				$commentQuery = "SELECT comment.id, comment.user_id, user.user_full_name, comment.comment, comment.comment_time FROM comment INNER JOIN user ON user.user_id = comment.user_id WHERE comment.store_id = {$storeId} ORDER BY comment.comment_time DESC LIMIT {$ignore}, 20";
+				$commentResult = mysqli_query($this->mysql, $commentQuery);
+				while ($row = $commentResult->fetch_assoc()) {
+					array_push($comments, new Comment($row));
+				}
+				$passQuery = "SELECT comment.id FROM comment INNER JOIN user ON user.user_id = comment.user_id WHERE comment.store_id = {$storeId}";
+				$passResult = mysqli_query($this->mysql, $passQuery);
+				if (mysqli_num_rows($passResult) > $page * 20) {
+					$nextPageFlag = true;
+				}
+				return new Response(200, new CommentResponse($nextPageFlag, $ratings, $comments));
+			} else {
+				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function starRating($userId, $storeId, $star) {
+			if ($this->mysql) {
+				error_reporting(0);
+				$query = "SELECT rating({$userId}, {$storeId}, {$star})";
+				$rs = mysqli_query($this->mysql, $query);
+				if ($rs == false) {
+					return Response::getNormalError();
+				}
+				while($row = $rs->fetch_row()) {
+					if ($row[0] == 1) {
+						$ratings = array();
+						$queryRating = "SELECT getUserRating({$userId}, {$storeId}) as user_rating, ratingCount({$storeId}, 1) as one_star, ratingCount({$storeId}, 2) as two_star, ratingCount({$storeId}, 3) as three_star, ratingCount({$storeId}, 4) as four_star, ratingCount({$storeId}, 5) as five_star";
+						$ratingResult = mysqli_query($this->mysql, $queryRating);
+						if (mysqli_num_rows($ratingResult) > 0) {
+							$row = $ratingResult->fetch_row();
+							$userRating = $row[0];
+							for($i = 1; $i < 6; $i++) {
+								$count = $row[$i];
+								if ($count == NULL) {
+									$count = 0;
+								}
+								array_push($ratings, new Rating($i, $count, $i == $userRating));
+							}
+						}
+						return new Response(200, $ratings);
+					} else {
+						return Response::getNormalError();
+					}
+				}
+			} else {
+				return Response::getSQLConnectionError();
+			}
+		}
+
+		function comment($userId, $storeId, $comment) {
+			date_default_timezone_set("Asia/Bangkok");
+			if ($this->mysql) {
+				$commentTime = time() * 1000;
+				$query = "INSERT INTO comment (user_id, store_id, comment, comment_time) VALUES ({$userId}, {$storeId}, '{$comment}', {$commentTime})";
+				mysqli_query($this->mysql, $query);
+				if(mysqli_affected_rows($this->mysql) == 1) {
+					return $this->getStoreComments($userId, $storeId, 1); 
+				} else {
+					return Response::getNormalError();
+				}
+			} else {
+				return Response::getSQLConnectionError();
+			}
 		}
 
 		/**
