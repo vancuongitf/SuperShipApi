@@ -1,7 +1,7 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/connect/DbConnection.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/user/UserDataSource.php');
+	require_once('../../../connect/DbConnection.php');
+	require_once('../../../model/response/ApiError.php');
+	require_once('../../../datasource/user/UserDataSource.php');
 	$response = null;
 	if (isset($_POST['user_id']) && isset($_POST['pass']) && isset($_POST['otp_code'])) {
 		$userId = $_POST['user_id'];

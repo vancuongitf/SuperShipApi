@@ -1,10 +1,10 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/connect/DbConnection.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/order/OrderDataSource.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/shipper/ShipperDataSource.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/staff/StaffDataSource.php');
+	require_once('../../../../model/response/ApiError.php');
+	require_once('../../../../model/response/Response.php');
+	require_once('../../../../connect/DbConnection.php');
+	require_once('../../../../datasource/order/OrderDataSource.php');
+	require_once('../../../../datasource/shipper/ShipperDataSource.php');
+	require_once('../../../../datasource/staff/StaffDataSource.php');
 
 	$response = null;
 	switch ($_SERVER['REQUEST_METHOD']) {

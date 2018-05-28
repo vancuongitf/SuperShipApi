@@ -1,16 +1,18 @@
 <?php
-	
-	require_once('/storage/ssd3/122/4702122/public_html/model/user/User.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/RequestResetResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/MessageResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/user/Token.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/staff/Staff.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/ExpressBill.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/BillListResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/shipper/ShipperInfo.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/shipper/Shipper.php');
+	$path = getcwd();
+	$paths = explode("public_html", $path);
+	$basePath = $paths[0];
+	require_once($basePath . 'public_html/model/user/User.php');
+	require_once($basePath . 'public_html/model/response/Response.php');
+	require_once($basePath . 'public_html/model/response/ApiError.php');
+	require_once($basePath . 'public_html/model/response/RequestResetResponse.php');
+	require_once($basePath . 'public_html/model/response/MessageResponse.php');
+	require_once($basePath . 'public_html/model/user/Token.php');
+	require_once($basePath . 'public_html/model/staff/Staff.php');
+	require_once($basePath . 'public_html/model/store/ExpressBill.php');
+	require_once($basePath . 'public_html/model/response/BillListResponse.php');
+	require_once($basePath . 'public_html/model/shipper/ShipperInfo.php');
+	require_once($basePath . 'public_html/model/shipper/Shipper.php');
 
 	class StaffDataSource {
 		var $mysql;

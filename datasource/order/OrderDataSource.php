@@ -1,12 +1,16 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/Response.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/MessageResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/ExpressBill.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/BillListResponse.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/Bill.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/Location.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/store/OrderedDrink.php');
+	$path = getcwd();
+	$paths = explode("public_html", $path);
+	$basePath = $paths[0];
+	require_once($basePath . 'public_html/model/response/Response.php');
+	require_once($basePath . 'public_html/model/response/MessageResponse.php');
+	require_once($basePath . 'public_html/model/response/ApiError.php');
+	require_once($basePath . 'public_html/model/store/ExpressBill.php');
+	require_once($basePath . 'public_html/model/response/BillListResponse.php');
+	require_once($basePath . 'public_html/model/store/Bill.php');
+	require_once($basePath . 'public_html/model/store/Location.php');
+	require_once($basePath . 'public_html/model/store/OrderedDrink.php');
+	require_once($basePath . 'public_html/util/const/Constant.php');
 
 	class OrderDataSource {
 
@@ -225,6 +229,7 @@
 		function verifyPayPalPayment($payId) {
 			$uri = 'https://api.sandbox.paypal.com/v1/payments/payment/' . $payId;
 			$ch = curl_init($uri);
+			$payPalToken = 
 			curl_setopt_array($ch, array(
     			CURLOPT_HTTPHEADER  => array('Authorization: Bearer A21AAG2xcvlmzZ74U_CMhMGuwsPmHMRBE1gD9kt6ZvbJXtukdcGlbo6OqzTGYeY-2Wm8tcg8jcQuq5ehrlWKNJgIJsJt374_g',
 					'Content-Type: application/json'),

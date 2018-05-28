@@ -1,6 +1,9 @@
 <?php
+	$path = getcwd();
+	$paths = explode("public_html", $path);
+	$basePath = $paths[0];
+	require_once($basePath . 'public_html/model/Address.php');
 
-	require_once('/storage/ssd3/122/4702122/public_html/model/Address.php');	
 
 	class StoreInfoBill {
 

@@ -1,8 +1,8 @@
 <?php
-	require_once('/storage/ssd3/122/4702122/public_html/connect/DbConnection.php');
-	require_once('/storage/ssd3/122/4702122/public_html/model/response/ApiError.php');
-	require_once('/storage/ssd3/122/4702122/public_html/datasource/user/UserDataSource.php');
-	require_once('/storage/ssd3/122/4702122/public_html/util/TextUtil.php');
+	require_once('../../../connect/DbConnection.php');
+	require_once('../../../model/response/ApiError.php');
+	require_once('../../../datasource/user/UserDataSource.php');
+	require_once('../../../util/TextUtil.php');
 
 	$json = file_get_contents('php://input');
     $user = json_decode($json);
