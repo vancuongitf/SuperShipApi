@@ -2,6 +2,7 @@
 	
 	class Shipper {
 		function __construct($row) {
+			$this->token = $row['token'];
 			$this->id = $row['shipper_id'];
 			$this->full_name = $row['full_name'];
 			$this->birth_day = $row['birth_day'];

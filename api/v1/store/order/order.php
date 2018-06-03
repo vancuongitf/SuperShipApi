@@ -5,14 +5,26 @@
 	require_once('../../../../datasource/order/OrderDataSource.php');
 	require_once('../../../../datasource/shipper/ShipperDataSource.php');
 	require_once('../../../../datasource/staff/StaffDataSource.php');
-
+	require_once('../../../../util/check/token/CheckToken.php');
 	$response = null;
 	switch ($_SERVER['REQUEST_METHOD']) {
 		case 'POST':
 			if (file_get_contents('php://input') != null) {
 				$order = json_decode(file_get_contents('php://input'));
-				$orderDataSource = new OrderDataSource(DbConnection::getConnection());
-				$response = $orderDataSource->orderDrink($order);
+				$CheckToken = CheckToken::checkStaffToken($order->user_id);
+				switch ($CheckToken) {
+					case 0:
+					$response = Response::getAuthorizationError();
+						break;
+		
+					case 1:
+						$orderDataSource = new OrderDataSource(DbConnection::getConnection());
+						$response = $orderDataSource->orderDrink($order);
+						break;
+					default:
+						$response = Response::getSQLConnectionError();
+						break;
+				}
 			} else {
 				$response = new Response(678, new ApiError(678, "Thiếu dữ liệu."));
 			}			

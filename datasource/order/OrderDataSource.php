@@ -22,7 +22,7 @@
 
 
 		function orderDrink($orderBody) {
-			$userId = $this->getUserIdFromToken($orderBody->user_token);
+			$userId = $orderBody->user_id;
 			$billId = (int)(microtime(true)*10000);
 			$drinks = $orderBody->drinks;
 			date_default_timezone_set("Asia/Bangkok");
@@ -31,11 +31,7 @@
 				$latLng = $orderAddress->lat_lng;
 				$time = time() * 1000;
 				$confirmCode = rand(100000, 999999);
-				if ($userId == -1 || $userId == -2) {
-					return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
-				} else {
-					$query = "INSERT INTO `bill` (`bill_id`, `bill_store_id`, bill_user_id,`bill_user_name`, `bill_user_phone`, `bill_address`, `bill_lat`, `bill_lng`, `bill_ship_road`, `bill_time`, `bill_ship_price`, `bill_status`, `confirm_code`) VALUES ({$billId}, {$orderBody->store_id}, {$userId},'{$orderBody->user_name}', '{$orderBody->user_phone}', '{$orderAddress->address}', {$latLng->latitude}, {$latLng->longitude}, '{$orderBody->ship_road}', {$time}, {$orderBody->ship_price}, 0, $confirmCode);";
-				}
+				$query = "INSERT INTO `bill` (`bill_id`, `bill_store_id`, bill_user_id,`bill_user_name`, `bill_user_phone`, `bill_address`, `bill_lat`, `bill_lng`, `bill_ship_road`, `bill_time`, `bill_ship_price`, `bill_status`, `confirm_code`) VALUES ({$billId}, {$orderBody->store_id}, {$userId},'{$orderBody->user_name}', '{$orderBody->user_phone}', '{$orderAddress->address}', {$latLng->latitude}, {$latLng->longitude}, '{$orderBody->ship_road}', {$time}, {$orderBody->ship_price}, 0, $confirmCode);";
 				mysqli_query($this->mysql, $query);
 				if (mysqli_affected_rows($this->mysql) == 1) {
 					$drinkQuery = "INSERT INTO `bill_drink` (`id`, `bill_id`, `drink_id`, `drink_name`, `drink_image`, `drink_price`, `note`, `drink_option`, `drink_count`) VALUES ";

@@ -126,6 +126,8 @@
 					$userName = $row['user_name'];
 					$otp = rand(100000, 999999);
 					$otp_time = time();
+					$deleteQuery = "DELETE FROM otp WHERE user_id = {$id}";
+					mysqli_query($this->mysql, $deleteQuery);
 					$query = "INSERT INTO otp (user_id, otp_code, otp_time) VALUES ($id, $otp, $otp_time)";
 					mysqli_query($this->mysql, $query);
 					if (mysqli_affected_rows($this->mysql) == 1) {
@@ -148,7 +150,7 @@
 		function resetPassword($userId, $pass, $otp) {
 			$checkTime = time() - 300;
 			if ($this->mysql) {
-				$query = "DELETE FROM otp WHERE user_id = $userId AND otp_code = $otp AND otp_time > {$checkTime};";
+				$query = "DELETE FROM otp WHERE user_id = {$userId} AND otp_code = {$otp} AND otp_time > {$checkTime};";
 				mysqli_query($this->mysql, $query);
 				if (mysqli_affected_rows($this->mysql) > 0) {
 					$token = sha1($userId . microtime(true));
@@ -194,6 +196,20 @@
 				}
 			} else {
 					return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function editInfo($userId, $name, $phone) {
+			if ($this->mysql) {
+				$query = "UPDATE user SET user_full_name = '{$name}', user_phone = '{$phone}' WHERE user_id = {$userId};";
+				mysqli_query($this->mysql, $query);
+				if (mysqli_affected_rows($this->mysql) == 1) {
+					return new Response(200, new MessageResponse("Đã cập nhật thông tin thành công."));
+				} else {
+					return Response::getNormalError();
+				}
+			} else {
+					return Response::getSQLConnectionError();
 			}
 		}
 

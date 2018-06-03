@@ -5,9 +5,10 @@
 	require_once($basePath . 'public_html/model/response/Response.php');
 	require_once($basePath . 'public_html/model/response/ApiError.php');
 	require_once($basePath . 'public_html/model/response/MessageResponse.php');
+	require_once($basePath . 'public_html/model/response/RequestResetResponse.php');
+	require_once($basePath . 'public_html/model/response/BillListResponse.php');
 	require_once($basePath . 'public_html/model/store/ExpressBill.php');
 	require_once($basePath . 'public_html/model/user/Token.php');
-	require_once($basePath . 'public_html/model/response/BillListResponse.php');
 	require_once($basePath . 'public_html/model/shipper/Shipper.php');
 
 	class ShipperDataSource {
@@ -47,19 +48,15 @@
 						switch ($status) {
 							case '0':
 								return new Response(678, new ApiError(678 ,"Tài khoản chưa được kích hoạt. Vui lòng liên hệ tồng đài để được tư vấn."));
-								break;
 							
 							case '1':
-								return new Response(200, new Token($token)); 														
-								break;
+								return $this->getShiperInfo($token); 														
 
 							case '2':
 								return new Response(678, new ApiError(678 ,"Tài khoản đã bị khoá. Vui lòng liên hệ tổng đài để được hỗ trợ."));
-								break;
 
 							default:
 								return new Response(678, new ApiError(678 ,"Xãy ra lỗi! Vui lòng thử lại sau."));
-								break;
 						}
 					} else {
 						return new Response(678, new ApiError(678 ,"Xãy ra lỗi! Vui lòng thử lại sau."));
@@ -89,6 +86,20 @@
 					} else {
 						return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));	
 					}
+			}
+		}
+
+		function changeShipperInfo($shipperId, $phone) {
+			if ($this->mysql) {
+				$query = "UPDATE shipper SET phone_number = '{$phone}' WHERE shipper_id = {$shipperId}";
+				mysqli_query($this->mysql, $query);
+				if (mysqli_affected_rows($this->mysql) == 1) {
+					return Response::getMessageResponseWithMessage("Cập nhật thông tin thành công.");
+				} else {
+					return Response::getNormalError();
+				}
+			} else {
+				return Response::getSQLConnectionError();
 			}
 		}
 
@@ -290,28 +301,72 @@
 			}
 		}
 
-		function changePassword($token, $oldpass, $pass){
+		function changePassword($shipperId, $oldpass, $pass){
 			if ($this->mysql) {
-				$shipperId = $this->getShipperIdFromToken($token);
-				switch ($shipperId) {
-					
-					case -2: 
-						return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
-
-					case -1:
-						return new Response(401, new ApiError(401, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."));
-						
-					default:
-						$query = "UPDATE shipper SET password = '{$pass}' WHERE shipper_id = {$shipperId} AND password = {$oldpass}";
-						mysqli_query($this->mysql, $query);
-						if (mysqli_affected_rows($this->mysql) == 1) {
-							return new Response(200, "Đổi mật khẩu thành công.");
-						} else {
-							return new ApiError(678, "Mật khẩu cũ không chính xác.");
-						}
-				}
+					$query = "UPDATE shipper SET password = '{$pass}' WHERE shipper_id = {$shipperId} AND password = '{$oldpass}'";
+					mysqli_query($this->mysql, $query);
+					if (mysqli_affected_rows($this->mysql) == 1) {
+						return new Response(200, new MessageResponse("Đổi mật khẩu thành công."));
+					} else {
+						return new Response(678, new ApiError(678, "Mật khẩu cũ không chính xác."));
+					}
 			}else {
 				return new Response(678, new ApiError(678, "Không thể kết nối đến cơ sở dữ liệu của server. Vui lòng thử lại sau."));
+			}
+		}
+
+		function requestResetPass($email) {
+			if ($this->mysql) {
+				$query = "SELECT shipper_id, account FROM shipper WHERE email = '{$email}';";
+				$result = mysqli_query($this->mysql, $query);
+				if (mysqli_num_rows($result) == 1) {
+					$row = $result->fetch_assoc();
+					$id = $row['shipper_id'];
+					$userName = $row['account'];
+					$otp = rand(100000, 999999);
+					$otp_time = time();
+					$deleteQuery = "DELETE FROM otp WHERE shipper_id = {$id}";
+					mysqli_query($this->mysql, $deleteQuery);
+					$query = "INSERT INTO otp (shipper_id, otp_code, otp_time) VALUES ($id, $otp, $otp_time)";
+					mysqli_query($this->mysql, $query);
+					if (mysqli_affected_rows($this->mysql) == 1) {
+						if (@mail($email,"SUPER SHIP - ĐẶT LẠI MẬT KHẨU","Mã OTP của quý khách là: {$otp}. Mã chỉ có hiệu lực trong vòng 5 phút. Xin chân thành cảm ơn.")) {
+							return new Response(200, new RequestResetResponse($id, $userName));
+						} else {
+							return Response::getNormalError();
+						}
+					} else {
+						return Response::getNormalError();
+					}
+				} else {
+					return Response::getNormalErrorWithMessage("Email chưa đăng ký trên hệ thống.");
+				}
+			} else {
+					return Response::getSQLConnectionError();
+			}
+		}
+
+		function resetPassword($shipperId, $pass, $otp) {
+			$checkTime = time() - 300;
+			if ($this->mysql) {
+				$query = "DELETE FROM otp WHERE shipper_id = {$shipperId} AND otp_code = {$otp} AND otp_time > {$checkTime};";
+				mysqli_query($this->mysql, $query);
+				if (mysqli_affected_rows($this->mysql) > 0) {
+					$token = sha1($shipperId . microtime(true));
+					$query = "UPDATE shipper SET password = '{$pass}', token = '{$token}' WHERE shipper_id = $shipperId;";
+					mysqli_query($this->mysql, $query);
+					if (mysqli_affected_rows($this->mysql) == 1) {
+						$query = "DELETE FROM otp WHERE shipper_id = {$shipperId}";
+						mysqli_query($this->mysql, $query);
+						return new Response(200, new Token($token));
+					} else {
+						return Response::getNormalError();
+					}
+				} else {
+					return Response::getNormalErrorWithMessage("Mã OTP không chính xác hoặc đã hết hạn.");
+				}
+			} else {
+					return Response::getSQLConnectionError();
 			}
 		}
 

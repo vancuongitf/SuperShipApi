@@ -3,6 +3,7 @@
 	$paths = explode("public_html", $path);
 	$basePath = $paths[0];
 	require_once($basePath . 'public_html/model/response/ApiError.php');
+	require_once($basePath . 'public_html/model/response/MessageResponse.php');
 	class Response {
 		function __construct($code, $data) {
 			if ($code == 200) {
@@ -23,6 +24,10 @@
 
 		static function getNormalError() {
 			return new Response(678, new ApiError(678, "Xãy ra lỗi. Vui lòng thử lại sau."));
+		}
+
+		static function getMessageResponseWithMessage($message) {
+			return new Response(200, new MessageResponse($message));
 		}
 
 		static function getNormalErrorWithMessage($message) {

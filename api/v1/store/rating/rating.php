@@ -10,7 +10,7 @@
 		$storeId = $_POST['store_id'];
 		$rate = (int) $_POST['rate'];
 		if ($rate > 5 || $rate < 1) {
-			$response = Response::getNormalErrorWithMessage("Giá trị đánh giá không hợp lện.");
+			$response = Response::getNormalErrorWithMessage("Giá trị đánh giá không hợp lệ.");
 		} else {
 			$CheckToken = CheckToken::checkUserToken($userId);
 			switch ($CheckToken) {

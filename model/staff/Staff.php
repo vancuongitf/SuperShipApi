@@ -3,6 +3,7 @@
 	class Staff {
 
 		function __construct ($row) {
+			$this->token = $row['token'];
 			$this->id = $row['id'];
 			$this->account = $row['account'];
 			$this->full_name = $row['full_name'];

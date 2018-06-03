@@ -1,6 +1,7 @@
 <?php
 	require_once('../../../connect/DbConnection.php');
 	require_once('../../../model/response/ApiError.php');
+	require_once('../../../model/response/Response.php');
 	require_once('../../../datasource/user/UserDataSource.php');
 	$response = null;
 	if (isset($_GET['email'])) {
